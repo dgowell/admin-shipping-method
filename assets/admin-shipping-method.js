@@ -13,9 +13,14 @@
                 action: 'get_shipping_methods',
             },
             success: function (data, textStatus, XMLHttpRequest) {
-
+                if (data) {
+                    const shipping = data.shipping;
+                    const label = shipping[0].label;
+                    const cost = shipping[0].cost;
+                    alert(`Shipping option is ${label} at a cost of ${cost}`);
+                }
                 // show the control message
-                alert(data);
+                console.log(data);
 
             },
             error: function (XMLHttpRequest, textStatus, errorThrown) {
