@@ -74,16 +74,12 @@ if (
     * Ajax callback
     */
     function add_order_shipping() {
-
         //check_ajax_referer( 'order-item', 'security' );
 
         if ( ! current_user_can( 'edit_shop_orders' ) ) {
-        wp_die( -1 );
+            wp_die( -1 );
         }
-
-        // calculate the shipping cost from the orders details
-        // add the cost as a line item to the order
-        // save the order
+        global $woocommerce;
 
         $response = array();
 
@@ -96,33 +92,68 @@ if (
                 throw new Exception( __( 'Invalid order', 'woocommerce' ) );
             }
 
-            $order_taxes = $order->get_taxes();
-            $shipping_methods = WC()->shipping() ? WC()->shipping()->load_shipping_methods() : array();
+            $active_methods = array();
+            $values = array (
+                'address' => $order->get_shipping_address_1(),
+                'address_2' => $order->get_shipping_address_2(),
+                'city' => $order->get_shipping_city(),
+                'state' => $order->get_shipping_state(),
+                'postcode' => $order->get_shipping_postcode(),
+                'country' => $order->get_shipping_country(),
+                'total' => $order->get_total(),
+            );
 
-            // Add new shipping.
-            $item = new WC_Order_Item_Shipping();
-            //$all_rates = bbloomer_get_all_shipping_rates();
+            //ensure the cart is empty before adiding anything
+            $woocommerce->cart->empty_cart();
 
-            // Fake product number to get a filled card....
-            /*foreach ( $order->get_items() as $item_id => $item ) {
-                //for erach item in order add to cart
-                $woocommerce->cart->add_to_cart('1');
+            foreach ( $order->get_items() as $item_id => $item ) {
+                //add each item in order to cart
+                $woocommerce->cart->add_to_cart($item->get_product_id());
             }
-            */
 
-            $item->set_shipping_rate( new WC_Shipping_Rate() );
+            WC()->shipping->calculate_shipping(get_shipping_packages($values));
+            $shipping_methods = WC()->shipping->packages;
+
+            foreach ($shipping_methods[0]['rates'] as $id => $shipping_method) {
+                $active_methods[] = array( 'id' => $shipping_method->method_id,
+                'type' => $shipping_method->method_id,
+                'provider' => $shipping_method->method_id,
+                'name' => $shipping_method->label,
+                'price' => number_format($shipping_method->cost, 2, '.', ''));
+            }
+
+            $item = new WC_Order_Item_Shipping();
+            $item->set_shipping_rate( new WC_Shipping_Rate(
+                $active_methods[0]['id'],
+                $active_methods[0]['name'],
+                $active_methods[0]['price'],
+                $active_methods[0]['id']
+                ));
             $item->set_order_id( $order_id );
             $item_id = $item->save();
 
-            ob_start();
-            include __DIR__ . '/views/html-order-shipping.php';
-            $response['html'] = ob_get_clean();
        } catch ( Exception $e ) {
             wp_send_json_error( array( 'error' => $e->getMessage() ) );
         }
-        wp_send_json_success( $response);
+        wp_send_json_success( $item );
     }
 
+    /*
+    * Packages array for storing 'carts'
+    */
+    function get_shipping_packages($value) {
+        $packages = array();
+        $packages[0]['contents'] = WC()->cart->cart_contents;
+        $packages[0]['contents_cost'] = $value['total'];
+        $packages[0]['applied_coupons'] = WC()->session->applied_coupon;
+        $packages[0]['destination']['country'] = $value['country'];
+        $packages[0]['destination']['state'] = $value['state'];
+        $packages[0]['destination']['postcode'] = $value['postcode'];
+        $packages[0]['destination']['city'] = $value['city'];
+        $packages[0]['destination']['address'] = $value['address'];
+        $packages[0]['destination']['address_2']= $value['address_2'];
+        return apply_filters('woocommerce_cart_shipping_packages', $packages);
+    }
     /**
     * hook to add the ajax callback
     */

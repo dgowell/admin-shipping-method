@@ -16,8 +16,8 @@
                 order_id: order_id,
             },
             success: function (data, textStatus, XMLHttpRequest) {
-                debugger;
-                console.log("success");
+                console.log("Shipping Added");
+                window.location.reload();
             },
             error: function (XMLHttpRequest, textStatus, errorThrown) {
                 alert(errorThrown);
