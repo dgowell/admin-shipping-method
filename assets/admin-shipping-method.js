@@ -2,26 +2,22 @@
     'use strict';
 
     $('.inside').on('click','#add_shipping_method', function(){
-        console.log("clicked");
+
+        // get the order_id from the button tag
+        var order_id = $(this).data('order_id');
 
         // send the data via ajax to the sever
         $.ajax({
-            type: 'GET',
+            type: 'POST',
             url: tapa_shipping_var.ajaxurl,
             dataType: 'json',
             data: {
-                action: 'get_shipping_methods',
+                action: 'add_order_shipping',
+                order_id: order_id,
             },
             success: function (data, textStatus, XMLHttpRequest) {
-                if (data) {
-                    const shipping = data.shipping;
-                    const label = shipping[0].label;
-                    const cost = shipping[0].cost;
-                    alert(`Shipping option is ${label} at a cost of ${cost}`);
-                }
-                // show the control message
-                console.log(data);
-
+                debugger;
+                console.log("success");
             },
             error: function (XMLHttpRequest, textStatus, errorThrown) {
                 alert(errorThrown);
