@@ -12,18 +12,6 @@ if ( ! defined( 'ABSPATH' ) ) {
 exit; // Exit if accessed directly
 }
 
-if (!function_exists('write_log')) {
-    function write_log($log) {
-        if (true === WP_DEBUG) {
-            if (is_array($log) || is_object($log)) {
-                error_log(print_r($log, true));
-            } else {
-                error_log($log);
-            }
-        }
-    }
-}
-
 // Test to see if WooCommerce is active (including network activated).
 $plugin_path = trailingslashit( WP_PLUGIN_DIR ) . 'woocommerce/woocommerce.php';
 
@@ -40,8 +28,9 @@ if (
 
     // Create button
     function add_shipping_method_button( $order ) {
+        $ajax_nonce = wp_create_nonce( "add-shipping" );
         echo '<button id="add_shipping_method" type="button" class="button generate-items"
-            data-order_id="'. esc_attr($order->get_id())  .'">' . __( 'Add Shipping Method', 'hungred' ) . '</button>';
+            data-order_id="'. esc_attr($order->get_id())  .'" data-nonce="' . $ajax_nonce . '">' . __( 'Add Shipping Method', 'hungred' ) . '</button>';
     };
 
     /*
@@ -64,7 +53,7 @@ if (
     * Ajax callback
     */
     function add_order_shipping() {
-        //check_ajax_referer( 'order-item', 'security' );
+        check_ajax_referer( 'add-shipping', 'security' );
 
         if ( ! current_user_can( 'edit_shop_orders' ) ) {
             wp_die( -1 );
