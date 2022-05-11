@@ -30,7 +30,7 @@ if (
     function add_shipping_method_button( $order ) {
         $ajax_nonce = wp_create_nonce( "add-shipping" );
         echo '<button id="add_shipping_method" type="button" class="button generate-items"
-            data-order_id="'. esc_attr($order->get_id())  .'" data-nonce="' . $ajax_nonce . '">' . __( 'Add Shipping Method', 'hungred' ) . '</button>';
+            data-order_id="'. esc_attr($order->get_id()) .'" data-nonce="' . $ajax_nonce . '">' . __( 'Add shipping (update order first!)', 'hungred' ) . '</button>';
     };
 
     /*
