@@ -17,7 +17,26 @@
                 security: nonce,
             },
             success: function (data, textStatus, XMLHttpRequest) {
-                window.location.reload();
+                console.log(data.data);
+                const shipping_options = data.data;
+                const modal = document.getElementById("shipping-options");
+                const input = document.createElement('INPUT');
+                const label = document.createElement('LABEL');
+                const n = 0;
+                input.setAttribute("type", "radio");
+                input.setAttribute("id", shipping_options[n].type + '-' + shipping_options[n].id );
+                input.setAttribute("name", shipping_options[n].name);
+                input.setAttribute("value", shipping_options[n].id);
+                label.setAttribute("for", shipping_options[n].type + '-' + shipping_options[n].id);
+                label.textContent = shipping_options[n].price + ' - ' + shipping_options[n].name;
+                modal.appendChild(input);
+                modal.appendChild(label);
+                //<label for="fname">First name:</label><br>
+                //</br><input type="text" id="fname" name="fname" value="John"><br></br>
+                //add each shipping option to a form
+                //on form submit add the shipping option to the order
+                //window.location.reload()
+
             },
             error: function (XMLHttpRequest, textStatus, errorThrown) {
                 alert(errorThrown);

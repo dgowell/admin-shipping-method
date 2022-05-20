@@ -15,28 +15,34 @@ exit; // Exit if accessed directly
 // Test to see if WooCommerce is active (including network activated).
 $plugin_path = trailingslashit( WP_PLUGIN_DIR ) . 'woocommerce/woocommerce.php';
 
-if (
-    in_array( $plugin_path, wp_get_active_and_valid_plugins() )
-    || in_array( $plugin_path, wp_get_active_network_plugins() )
-) {
-    // Custom code here. WooCommerce is active, however it has not
-    // necessarily initialized (when that is important, consider
-    // using the `woocommerce_init` action).
+if (in_array( $plugin_path, wp_get_active_and_valid_plugins() ) || in_array( $plugin_path, wp_get_active_network_plugins() )) {
 
+    /*
+    * ADMIN BUTTON
+    */
+    function add_shipping_method_button( $order ) {
+        $ajax_nonce = wp_create_nonce( "add-shipping" );
+        add_thickbox();
+        echo '<a href="#TB_inline?width=600&height=550&inlineId=shipping-choices-modal" id="add_shipping_method" type="button"
+            class="button generate-items thickbox" title="Choose a shipping option"
+            data-order_id="'. esc_attr($order->get_id()) .'" data-nonce="' . $ajax_nonce . '">' . __( 'Add shipping (update order first!)', 'hungred' ) . '</a>';
+
+        echo '<div id="shipping-choices-modal" style="display:none;">
+            <h3>
+                Available shipping options:
+            </h3>
+            <div id="shipping-options">
+            </div>
+            <input type="submit" value="Submit">
+        </div>';
+    };
     // Hook button into order interface
     add_action( 'woocommerce_order_item_add_action_buttons', 'add_shipping_method_button', 10, 1);
 
-    // Create button
-    function add_shipping_method_button( $order ) {
-        $ajax_nonce = wp_create_nonce( "add-shipping" );
-        echo '<button id="add_shipping_method" type="button" class="button generate-items"
-            data-order_id="'. esc_attr($order->get_id()) .'" data-nonce="' . $ajax_nonce . '">' . __( 'Add shipping (update order first!)', 'hungred' ) . '</button>';
-    };
 
     /*
     * Add Javascript
     */
-
     function add_admin_shipping_method_script() {
         wp_enqueue_script( 'admin_shipping_method_script', plugin_dir_url(__FILE__) ."/assets/admin-shipping-method.js", array('jquery'), NULL, true
     );
@@ -48,6 +54,9 @@ if (
     * hook to add the javascript file
     */
     add_action( 'admin_enqueue_scripts', 'add_admin_shipping_method_script' );
+
+
+
 
     /**
     * Ajax callback
@@ -93,14 +102,17 @@ if (
             WC()->shipping->calculate_shipping(get_shipping_packages($values));
             $shipping_methods = WC()->shipping->packages;
 
+            $i = 0;
             foreach ($shipping_methods[0]['rates'] as $id => $shipping_method) {
-                $active_methods[] = array( 'id' => $shipping_method->method_id,
+                $active_methods[] = array( 'id' => $i,
                 'type' => $shipping_method->method_id,
                 'provider' => $shipping_method->method_id,
                 'name' => $shipping_method->label,
                 'price' => number_format($shipping_method->cost, 2, '.', ''));
+                $i++;
             }
 
+            /*
             $item = new WC_Order_Item_Shipping();
             $item->set_shipping_rate( new WC_Shipping_Rate(
                 $active_methods[0]['id'],
@@ -110,11 +122,12 @@ if (
                 ));
             $item->set_order_id( $order_id );
             $item_id = $item->save();
+            */
 
        } catch ( Exception $e ) {
             wp_send_json_error( array( 'error' => $e->getMessage() ) );
         }
-        wp_send_json_success( $item );
+        wp_send_json_success( $active_methods );
     }
 
     /*
