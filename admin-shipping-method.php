@@ -31,9 +31,8 @@ if (in_array( $plugin_path, wp_get_active_and_valid_plugins() ) || in_array( $pl
             <h3>
                 Available shipping options:
             </h3>
-            <div id="shipping-options">
+            <div id="shipping-options" data-nonce="' . $ajax_nonce . '">
             </div>
-            <input type="submit" value="Submit">
         </div>';
     };
     // Hook button into order interface
@@ -56,12 +55,23 @@ if (in_array( $plugin_path, wp_get_active_and_valid_plugins() ) || in_array( $pl
     add_action( 'admin_enqueue_scripts', 'add_admin_shipping_method_script' );
 
 
+    /*
+    * Add Javascript
+    */
+    function add_admin_shipping_method_style() {
+        wp_enqueue_style( 'admin_shipping_method_styles', plugin_dir_url(__FILE__) ."/assets/admin-shipping-method.css", array() , NULL, true);
+    }
+    /**
+    * hook to add the javascript file
+    */
+    add_action( 'admin_enqueue_scripts', 'add_admin_shipping_method_style' );
+
 
 
     /**
-    * Ajax callback
+    * Ajax callback - Return all the shipping options
     */
-    function add_order_shipping() {
+    function get_shipping_choices() {
         check_ajax_referer( 'add-shipping', 'security' );
 
         if ( ! current_user_can( 'edit_shop_orders' ) ) {
@@ -91,7 +101,7 @@ if (in_array( $plugin_path, wp_get_active_and_valid_plugins() ) || in_array( $pl
                 'total' => $order->get_total(),
             );
 
-            //ensure the cart is empty before adiding anything
+            //ensure the cart is empty before adding anything
             $woocommerce->cart->empty_cart();
 
             foreach ( $order->get_items() as $item_id => $item ) {
@@ -111,18 +121,6 @@ if (in_array( $plugin_path, wp_get_active_and_valid_plugins() ) || in_array( $pl
                 'price' => number_format($shipping_method->cost, 2, '.', ''));
                 $i++;
             }
-
-            /*
-            $item = new WC_Order_Item_Shipping();
-            $item->set_shipping_rate( new WC_Shipping_Rate(
-                $active_methods[0]['id'],
-                $active_methods[0]['name'],
-                $active_methods[0]['price'],
-                $active_methods[0]['id']
-                ));
-            $item->set_order_id( $order_id );
-            $item_id = $item->save();
-            */
 
        } catch ( Exception $e ) {
             wp_send_json_error( array( 'error' => $e->getMessage() ) );
@@ -149,6 +147,47 @@ if (in_array( $plugin_path, wp_get_active_and_valid_plugins() ) || in_array( $pl
     /**
     * hook to add the ajax callback
     */
-    add_action( 'wp_ajax_add_order_shipping', 'add_order_shipping' );
+    add_action( 'wp_ajax_get_shipping_choices', 'get_shipping_choices' );
+
+
+    /*
+    * Ajax callback - Add the shipping choice to the order
+    */
+    function add_shipping_choice_to_order() {
+        //security checks
+        check_ajax_referer( 'add-shipping', 'security' );
+        if ( ! current_user_can( 'edit_shop_orders' ) ) {
+            wp_die( -1 );
+        }
+
+        $response = array();
+
+        try {
+            $order_id = isset( $_POST['order_id'] ) ? absint( $_POST['order_id'] ) : 0;
+            $shipping_id = isset( $_POST['shipping_id'] ) ? $_POST['shipping_id'] : '';
+            $shipping_name = isset( $_POST['shipping_name'] ) ? $_POST['shipping_name'] : '';
+            $shipping_price = isset( $_POST['shipping_price'] ) ? floatval( $_POST['shipping_price'] ) : 0;
+
+            $order = wc_get_order( $order_id );
+
+            if ( ! $order ) {
+                throw new Exception( __( 'Invalid order', 'woocommerce' ) );
+            }
+
+            $item = new WC_Order_Item_Shipping();
+            $item->set_shipping_rate( new WC_Shipping_Rate(
+                $shipping_id,
+                $shipping_name,
+                $shipping_price,
+            ));
+            $item->set_order_id( $order_id );
+            $item_id = $item->save();
+
+        } catch ( Exception $e ) {
+            wp_send_json_error( array( 'error' => $e->getMessage() ) );
+        }
+            wp_send_json_success( $shipping_price );
+    }
+    add_action( 'wp_ajax_add_shipping_choice_to_order', 'add_shipping_choice_to_order' );
 }
 ?>
