@@ -51,6 +51,7 @@
                     submit.setAttribute("type", "submit");
                     submit.setAttribute("value", "submit");
                     submit.setAttribute("id", "submit-shipping");
+                    submit.setAttribute("style", "margin-top:15px;")
                     submit.setAttribute("data-nonce", nonce);
                     submit.setAttribute("data-order_id", order_id);
                     form.appendChild(submit);

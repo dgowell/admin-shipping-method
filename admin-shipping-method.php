@@ -55,19 +55,6 @@ if (in_array( $plugin_path, wp_get_active_and_valid_plugins() ) || in_array( $pl
     add_action( 'admin_enqueue_scripts', 'add_admin_shipping_method_script' );
 
 
-    /*
-    * Add Javascript
-    */
-    function add_admin_shipping_method_style() {
-        wp_enqueue_style( 'admin_shipping_method_styles', plugin_dir_url(__FILE__) ."/assets/admin-shipping-method.css", array() , NULL, true);
-    }
-    /**
-    * hook to add the javascript file
-    */
-    add_action( 'admin_enqueue_scripts', 'add_admin_shipping_method_style' );
-
-
-
     /**
     * Ajax callback - Return all the shipping options
     */
