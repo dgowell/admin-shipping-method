@@ -2,7 +2,7 @@
 /**
 * Plugin Name: Admin Shipping Methods
 * Description: Adds table rate shipping methods to admin add order page.
-* Version: 0.3
+* Version: 0.4
 * Author: TapaCode
 * Author URI: http://www.tapacode.com
 */
@@ -23,7 +23,7 @@ if (in_array( $plugin_path, wp_get_active_and_valid_plugins() ) || in_array( $pl
     function add_shipping_method_button( $order ) {
         $ajax_nonce = wp_create_nonce( "add-shipping" );
         add_thickbox();
-        echo '<a href="#TB_inline?width=600&height=550&inlineId=shipping-choices-modal" id="add_shipping_method" type="button"
+        echo '<a href="#TB_inline?width=400&height=200&inlineId=shipping-choices-modal" id="add_shipping_method" type="button"
             class="button generate-items thickbox" title="Choose a shipping option"
             data-order_id="'. esc_attr($order->get_id()) .'" data-nonce="' . $ajax_nonce . '">' . __( 'Add shipping (update order first!)', 'hungred' ) . '</a>';
 
