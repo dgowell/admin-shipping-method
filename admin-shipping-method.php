@@ -2,7 +2,7 @@
 /**
 * Plugin Name: Admin Shipping Methods
 * Description: Adds table rate shipping methods to admin add order page.
-* Version: 0.2
+* Version: 0.3
 * Author: TapaCode
 * Author URI: http://www.tapacode.com
 */
